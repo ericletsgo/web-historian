@@ -98,6 +98,7 @@ describe('archive helpers', function() {
       var total = 2;
 
       archive.isUrlInList('example1.com', function (exists) {
+        console.log('this:', exists);
         expect(exists).to.be.true;
         if (++counter === total) { done(); }
       });
