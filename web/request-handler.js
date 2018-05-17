@@ -36,7 +36,7 @@ exports.handleRequest = function (req, res) {
     req.on('data', (chunk) => {
       body += chunk.toString();
     }).on('end', function() {
-      archive.addUrlToList(body.slice(4));
+      archive.addUrlToList(body.slice(4), function() {});
       res.writeHead(302, headers);
       res.end();
     });
