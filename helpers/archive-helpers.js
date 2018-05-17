@@ -66,6 +66,6 @@ exports.isUrlArchived = function(url, callback) {
 
 exports.downloadUrls = function(urls) {
   urls.forEach(function(url) {
-    http.get(url);
+    //npm request
   });
 };
