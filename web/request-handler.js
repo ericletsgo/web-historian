@@ -11,11 +11,10 @@ exports.handleRequest = function (req, res) {
   var headers = helper.headers;
   // parser.href = req.url;
   
-  // console.log(req);
   if (req.method === 'GET' && req.url === '/') {
     fs.readFile(archive.paths.indexHtml, 'utf8', (err, data) => {
       if (err) { throw err; }
-      console.log(data);
+
       res.writeHead(200, headers);
       res.end(data);  
     });
@@ -36,9 +35,47 @@ exports.handleRequest = function (req, res) {
     req.on('data', (chunk) => {
       body += chunk.toString();
     }).on('end', function() {
-      archive.addUrlToList(body.slice(4), function() {});
-      res.writeHead(302, headers);
-      res.end();
+      var url = body.slice(4);
+      // check if url is archived
+      archive.isUrlArchived(url, function(exist) {
+        // if url is archived,
+        if (exist) {
+          // serve archived site
+          fs.readFile(archive.paths.archivedSites + '/' + url, 'utf8', (err, data) => {
+            if (err) { throw err; }
+            res.writeHead(200, headers);
+            res.end(data);
+          });
+        } else {
+          // if url is not archived, check if it is in site.txt
+          archive.isUrlInList(url, function(exist) {
+            if (exist) {
+              // if url is in list, serve loading page
+              fs.readFile(archive.paths.loadingHtml, 'utf8', (err, data) => {
+                if (err) { throw err; }
+                res.writeHead(301, headers);
+                res.end(data);
+              });
+            } else {
+              // if url is not in list, add to list
+              archive.addUrlToList(url, function(err) {
+                // if add to list fails, serve 500
+                if (err) {
+                  fs.writeHead(500, headers);
+                  fs.end();
+                } else {
+                  // if add to list success, serve loading page
+                  fs.readFile(archive.paths.loadingHtml, 'utf8', (err, data) => {
+                    if (err) { throw err; }
+                    res.writeHead(301, headers);
+                    res.end(data);
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
     });
   }
 
